@@ -143,10 +143,10 @@ Output will appear in the terminal.
 
 | Action        | Shortcut         | Purpose |
 |--------------|------------------|--------|
-| Step Over    | F10              | Run line without entering functions |
+| Step Over    | F10              | Run the next line without entering functions |
 | Step Into    | F11              | Enter your own code or logic |
 | Step Out     | Shift + F11      | Exit current function or loop |
-| Continue     | F5               | Run until next breakpoint |
+| Continue     | F5               | Run until next breakpoint or program ends |
 
 ---
 
