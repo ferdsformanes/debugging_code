@@ -1,5 +1,4 @@
-
-# Debugging a Python API Script in VS Code
+# How to Debug a Python API Script in VS Code
 A simple guide to using **Step Over**, **Step Into**, **Step Out**, and **Continue** when debugging a Python script (example: Cisco SD‑WAN API).
 
 ---
@@ -28,6 +27,31 @@ resp = session.post(login_url, data=payload, verify=False)
 - Choose **Python File**
 
 VS Code pauses at your breakpoint.
+
+---
+## 3.1 (Optional) Disable Debug Inline Values  
+VS Code may show **yellow-highlighted inline variable values** during debugging.  
+This feature is called **Debug Inline Values**.
+
+If you want to disable it:
+
+**Method 1 — Quick Toggle**  
+1. Press **Ctrl + Shift + P**  
+2. Search: **Toggle Inline Values**  
+3. Turn it **OFF**
+
+**Method 2 — Permanent Setting**  
+Go to:
+
+```
+Settings → Debug → Inline Values
+```
+
+Uncheck:
+
+```
+Debug › Inline Values: Enabled
+```
 
 ---
 ## 4. Step Over (F10) – Run the Line Without Entering Libraries
