@@ -1,4 +1,4 @@
-# SD-WAN API Automation Demo in VS Code
+# SD-WAN API Automation in VS Code: Structured Testing with Cells, Run Selection, and __main__
 
 ## Using #%% Cells, Run Selection, and if **name** == "**main**"
 
