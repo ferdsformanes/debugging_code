@@ -1,12 +1,14 @@
-# SD-WAN API Automation in VS Code: Structured Testing with Cells, Run Selection, and __main__
+# Cisco Catalyst SD-WAN Manager API in VS Code
 
-## Using #%% Cells, Run Selection, and if **name** == "**main**"
+## Structured Testing with `# %%`, Run Selection, and `if __name__ == "__main__"`
+
+Using the Cisco DevNet SD-WAN Always-On Sandbox
 
 ------------------------------------------------------------------------
 
 ## 🎯 Goal
 
-Authenticate → Get Edges → Filter Online Edges → Print Their Names
+Login → Retrieve Device List → Print Hostnames & Device IDs
 
 This guide demonstrates:
 
@@ -16,57 +18,89 @@ This guide demonstrates:
 
 ------------------------------------------------------------------------
 
-## 🧪 Example SD-WAN API Script
+# 🧪 Example: Cisco SD-WAN Device Retrieval Script
+
+Host:\
+`https://sandbox-sdwan-2.cisco.com`
+
+------------------------------------------------------------------------
 
 ``` python
 # %%
 # SECTION 1 - Authentication
 
 import requests
+import urllib3
 
-API_HOST = "https://api.sdwan-controller.com"
-TOKEN = "YOUR_API_TOKEN"
+# Ignore SSL warnings (sandbox uses self-signed cert)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-HEADERS = {
-    "Authorization": f"Token {TOKEN}",
-    "Content-Type": "application/json"
-}
+HOST = "https://sandbox-sdwan-2.cisco.com"
+USERNAME = "devnetuser"
+PASSWORD = "RG!_Yw919_83"
 
-def get_edges():
-    # Retrieve all SD-WAN edges from the controller
-    url = f"{API_HOST}/api/sdwan/v2/enterprises/12345/edges"
-    response = requests.get(url, headers=HEADERS)
+def login():
+    """
+    Authenticate and return a requests session
+    with a valid JSESSIONID cookie.
+    """
+    session = requests.Session()
+    login_url = f"{HOST}/j_security_check"
 
-    response.raise_for_status()
-    return response.json()
+    payload = {
+        "j_username": USERNAME,
+        "j_password": PASSWORD
+    }
 
+    response = session.post(login_url, data=payload, verify=False)
 
+    if response.status_code != 200 or "JSESSIONID" not in session.cookies:
+        raise Exception("Login failed!")
+
+    print("Logged in successfully")
+    print("JSESSIONID:", session.cookies.get("JSESSIONID"))
+
+    return session
+```
+
+------------------------------------------------------------------------
+
+``` python
 # %%
-# SECTION 2 - Filter Online Edges
+# SECTION 2 - Retrieve Devices
 
-def filter_online_edges(edges):
-    # Return only edges with status == CONNECTED
-    online = [
-        edge for edge in edges
-        if edge.get("edgeState") == "CONNECTED"
-    ]
-    return online
+def get_devices(session):
+    """
+    Retrieve device list from SD-WAN Manager.
+    """
+    devices_url = f"{HOST}/dataservice/device"
 
+    response = session.get(devices_url, verify=False)
 
+    if response.status_code != 200:
+        raise Exception(
+            f"Failed to retrieve devices: {response.status_code}, {response.text}"
+        )
+
+    return response.json()
+```
+
+------------------------------------------------------------------------
+
+``` python
 # %%
 # SECTION 3 - Main Execution
 
 def main():
-    print("Retrieving edges from SD-WAN controller...\n")
+    print("Connecting to Cisco SD-WAN Manager...\n")
 
-    edges = get_edges()
-    online_edges = filter_online_edges(edges)
+    session = login()
+    devices = get_devices(session)
 
-    print(f"Total Edges: {len(edges)}")
-    print(f"Online Edges: {len(online_edges)}\n")
+    print("Retrieved devices:\n")
 
-    for edge in online_edges:
-        print(f"{edge['name']} - {edge['edgeState']}")
+    for device in devices.get("data", []):
+        print(f"- {device['host-name']} ({device['deviceId']})")
 
 if __name__ == "__main__":
     main()
@@ -80,19 +114,25 @@ if __name__ == "__main__":
 
 ## 1️⃣ Using `# %%` Cells (Structured API Testing)
 
--   Run Section 1 only to test API retrieval.
+Run Section 1 only:
 
--   Manually test:
+``` python
+session = login()
+session.cookies
+```
 
-    ``` python
-    edges = get_edges()
-    edges[0]
-    ```
+Then test device retrieval:
 
--   Run Section 2 separately to validate filtering logic.
+``` python
+devices = get_devices(session)
+devices.keys()
+```
 
-Why this matters: - Validate raw API responses first - Debug JSON
-structures safely - Avoid running the full script repeatedly
+Why this matters:
+
+-   Validate authentication first\
+-   Inspect JSON safely\
+-   Avoid running the full script repeatedly
 
 ------------------------------------------------------------------------
 
@@ -101,17 +141,20 @@ structures safely - Avoid running the full script repeatedly
 Highlight and run:
 
 ``` python
-len(edges)
+len(devices["data"])
 ```
 
-Then:
+Or:
 
 ``` python
-len(filter_online_edges(edges))
+devices["data"][0]
 ```
 
-Best for: - Checking edge counts - Validating logic quickly - Testing
-small expressions without full execution
+Best for:
+
+-   Checking device count\
+-   Inspecting JSON structure\
+-   Fast debugging
 
 ------------------------------------------------------------------------
 
@@ -122,23 +165,17 @@ if __name__ == "__main__":
     main()
 ```
 
-This ensures: - The automation runs only when executed directly - The
-script does NOT auto-run when imported - Prevents accidental API calls
-or config pushes
+This ensures:
 
-Example:
-
-``` python
-from sdwan_script import get_edges
-```
-
-Notice nothing runs automatically.
+-   Code runs only when executed directly\
+-   Nothing runs automatically when imported\
+-   Prevents accidental API execution
 
 ------------------------------------------------------------------------
 
 # 🔥 Key Takeaway
 
-When working with SD-WAN APIs:
+When working with Cisco SD-WAN APIs:
 
 -   Use cells for structured testing\
 -   Use Run Selection for quick checks\
